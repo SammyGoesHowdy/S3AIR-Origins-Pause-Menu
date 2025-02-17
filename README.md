@@ -32,7 +32,17 @@ function string Origins.getCharacterPlayerName(u8 character)
     return "AMY"
 }
 ```
+## Credits
 
+### Key Authors
+* SammyGoesHowdy - Sprites/Coder
+* [Timothy!](https://gamebanana.com/members/4096550) Sprites, Partial Spanish Translation help
+### Original Authors
+* SEGA - Translations, creating Sonic Origins
+* [BetaNCourses](https://gamebanana.com/members/1733915) -  Genesis Buttons used
+### Special Thanks
+* Team Galore Server & S3A.I.R. Community Server - Assistance
+* [KellyM](https://gamebanana.com/members/1825734) - Code that makes the selection colours glow
 ## FAQ:
 
 **Q. Will you add support for Sonic 3 A.I.R. with Extra Mushrooms?**<br>
