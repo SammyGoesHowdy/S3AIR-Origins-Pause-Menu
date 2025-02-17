@@ -36,7 +36,7 @@ function string Origins.getCharacterPlayerName(u8 character)
 
 ### Key Authors
 * SammyGoesHowdy - Sprites/Coder
-* [Timothy!](https://gamebanana.com/members/4096550) Sprites, Partial Spanish Translation help
+* [Timothy!](https://gamebanana.com/members/4096550) - Sprites, Partial Spanish Translation help
 ### Original Authors
 * SEGA - Translations, creating Sonic Origins
 * [BetaNCourses](https://gamebanana.com/members/1733915) -  Genesis Buttons used
