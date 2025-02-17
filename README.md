@@ -2,7 +2,7 @@
 
 # Sonic Origins Pause Menu
 
-<font color="red">*THIS MOD REQUIRES [SONIC 3 A.I.R. 25.02.15.0](https://github.com/Eukaryot/sonic3air/releases/tag/v25.02.15.0-test) OR NEWER, OLDER VERSIONS WILL NOT WORK.*</font>
+***THIS MOD REQUIRES [SONIC 3 A.I.R. 25.02.15.0](https://github.com/Eukaryot/sonic3air/releases/tag/v25.02.15.0-test) OR NEWER, OLDER VERSIONS WILL NOT WORK.***
 
 This mod is an accurate recreation of the Sonic Origins pause menu for Sonic 3 A.I.R.
 
@@ -14,7 +14,9 @@ This mod is an accurate recreation of the Sonic Origins pause menu for Sonic 3 A
 
 * Support for [Achievements Plus](https://github.com/fadeinside/s3air-achievements-plus), shows your coin amount on the pause menu (Optional)
 
-* 
+* Multiple Controller button sprites in the style of Sonic Origins (With the default 3 A.I.R. sprites being the default, due to them being dynamic)
+
+* Usernames
 
 ## Modding:
 To add support, simply check if the player is playing as your character, if so, return your characters name, otherwise return the original function.
