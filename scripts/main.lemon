@@ -1,0 +1,324 @@
+global u8 Origins.PlayerBarName
+global u8 Origins.ShowAPCoins
+global u8 Origins.UseOptions
+global u8 Origins.InputStyle
+global u8 Origins.Language
+global u8 OriginsGamePause.hasMainMenu = false
+global u8 OriginsGamePause.Digit = 0
+global u8 OriginsGamePause.DigitTimer = 0
+global u8 Origins.RestartButton
+global u8 Origins.ScreeniePrompt
+function void GamePause.Menu()
+{
+	// Script implementation of game pause
+	GamePause.hasRestart = !global.pause_disabled && (global.game_mode == 0x0c && global.stage_type == 0 && u8[0xffffb000 + 0x05] <= base_state.HURT) && !competition_mode.active
+	GamePause.hasOptions = (!bluespheres.minigame_mode && global.stage_type == 0)
+	OriginsGamePause.hasMainMenu = global.stage_type == 0
+	// Pause currently playing game music and sounds
+	Audio.pauseContext(AudioContext.CONTEXT_MUSIC)
+	Audio.pauseContext(AudioContext.CONTEXT_SOUND)
+	Audio.playAudio("origins_pause")
+	OriginsGamePause.Digit = 0
+	OriginsGamePause.DigitTimer = 0
+#if GAMEAPP
+	// Handle skippable cutscene
+	bool wasInSkippableCutscene = Game.isInSkippableCutscene()
+	Game.endSkippableCutscene()
+#endif
+
+	constant float KEY_REPEAT_TIMEOUT = 0.4f
+	constant float KEY_REPEAT_DELAY   = 0.125f
+	float keyRepeatTimer = KEY_REPEAT_TIMEOUT
+	s8 lastPressedInput = -1
+
+	GamePause.visibility = 0.0f
+	GamePause.selectedEntry = 0
+	float totalTime = 0.0f
+	bool screenshotModeActive = false
+
+	while (true)
+	{
+		// Inner loop will be exited once the player selected an entry in the menu
+		while (true)
+		{
+			float deltaSeconds = 1.0f / 60.0f
+			totalTime += deltaSeconds
+
+			// Fade-in
+			if (GamePause.visibility < 1.0f)
+				GamePause.visibility = min(GamePause.visibility + deltaSeconds * 12.0f, 1.0f)
+						if (!screenshotModeActive)
+			{
+				GamePause.DrawMenu(totalTime)
+			}
+			else
+			{
+				Renderer.resetLifetimeContext(1)
+			}
+
+			enableCustomPlaneReset = false	// Maintain custom planes that were set before the pause
+			waitForNextFrame()
+			enableCustomPlaneReset = false	// ...also for the next frame (relevant in case of e.g. restart)
+
+			// Undo increase of global framecounter (see "VInt.InnerUpdate"), to avoid messing up animations that rely on it
+			--global.framecounter
+			
+			if (screenshotModeActive)
+			{
+				if (Input.buttonPressed(0, BUTTON_Y))
+					screenshotModeActive = false
+			}
+			else
+			{
+				if (Input.buttonPressed(0, BUTTON_Y))
+					screenshotModeActive = true
+			if (Input.buttonPressed(0, BUTTON_START) || Input.buttonPressed(0, BUTTON_A) || Input.buttonPressed(0, BUTTON_X))
+			{
+				Audio.playAudio("origins_ok")
+				break
+			}
+
+			else if (Input.buttonPressed(0, BUTTON_B))
+			{
+				Audio.playAudio("origins_cancel")
+				GamePause.selectedEntry = 0 // We set this to zero because it'll still select the selected entry anyway.
+				break
+			}
+				// Handle key repeat
+			s8 currentInput = -1
+			{
+				if (Input.buttonPressed(BUTTON_UP))
+					currentInput = BUTTON_UP
+				else if (Input.buttonPressed(BUTTON_DOWN))
+					currentInput = BUTTON_DOWN
+				else if (lastPressedInput >= 0 && Input.buttonDown(lastPressedInput))
+					currentInput = lastPressedInput
+
+				lastPressedInput = currentInput
+
+				if (currentInput == -1)
+				{
+					// No input at all, so reset key repeat
+					keyRepeatTimer = KEY_REPEAT_TIMEOUT
+				}
+				else if (Input.buttonPressed(currentInput))
+				{
+					// Input pressed for the first frame now
+					keyRepeatTimer = KEY_REPEAT_TIMEOUT
+				}
+				else
+				{
+					// Input held down
+					keyRepeatTimer -= deltaSeconds
+					if (keyRepeatTimer <= 0.001f)
+						keyRepeatTimer = KEY_REPEAT_DELAY
+					else
+						currentInput = -1
+				}
+			}
+
+			s8 entryChange = (currentInput == BUTTON_UP) ? -1 : (currentInput == BUTTON_DOWN) ? 1 : 0
+			if (entryChange != 0)
+			{
+				OriginsGamePause.DigitTimer = 0
+				OriginsGamePause.Digit = 0
+				Audio.playAudio("origins_cursor_move")
+				while (true)
+				{
+					GamePause.selectedEntry = (GamePause.selectedEntry + GamePause.NUM_ENTRIES + entryChange) % GamePause.NUM_ENTRIES
+					if (GamePause.IsValidEntry(GamePause.selectedEntry))
+						break
+				}
+			}
+			}
+		}
+
+			// Player chose a normal entry
+			if (GamePause.selectedEntry == 0)
+			{
+				// Leave this menu again and continue gameplay
+				break
+			}
+			else if (GamePause.selectedEntry == 1)
+			{
+				if (Game.isTimeAttack())
+				{
+					global.game.paused = false	// Done here already so the menu can fade out during the following screen fade
+					Audio.resumeContext(AudioContext.CONTEXT_MUSIC)
+					Audio.resumeContext(AudioContext.CONTEXT_SOUND)
+					restartTimeAttack()
+					break
+				}
+				else
+				{
+					if Origins.RestartButton == 1
+						restartAtCheckpoint()
+					else
+						restartLevel()
+					break
+				}
+			}
+			else if (GamePause.selectedEntry == 2)
+			{
+			if (Origins.UseOptions == 1)
+			{
+				// Open in-game options
+				// TODO: How about a quick fade-out here as well?
+				#if GAMEAPP
+					Game.openOptionsMenu()
+					yieldExecution()
+				#endif
+			}
+			else
+			{
+				global.game_mode = 0
+				break
+			}
+			}
+			else if (GamePause.selectedEntry == 3)
+			{
+				// First open the dialog menu for Exit Game
+				#if GAMEAPP
+					Game.returnToMainMenu()
+					yieldExecution()
+				#endif
+				break
+			}
+			
+	}
+	Renderer.resetLifetimeContext(1)
+
+	// Resume game audio
+	Audio.resumeContext(AudioContext.CONTEXT_MUSIC)
+	Audio.resumeContext(AudioContext.CONTEXT_SOUND)
+
+#if GAMEAPP
+	if (wasInSkippableCutscene)
+		Game.startSkippableCutscene()
+#endif
+}
+
+function string Origins.getCharacterPlayerName(u8 character)
+{
+	if Origins.PlayerBarName == 0
+		return (global.characters == CHARS_SONIC_AND_TAILS || character == CHARS_SONIC_ALONE) ? "SONIC" : (character == CHARS_TAILS_ALONE) ? ((global.region_code & 0x80) ? "TAILS" : "MILES") : (character == CHARS_KNUCKLES_ALONE) ? "KNUCKLES" : "INTEGERGEORGE802"
+	else if Origins.PlayerBarName == 1
+		return "INTEGERGEORGE802"
+	else if Origins.PlayerBarName == 2
+		return "yuzu"
+}
+
+function string Origins.GetAchievementsPlusCoins()
+{
+	return stringformat("x %d", u32[0x851300]) 
+}
+
+
+function bool GamePause.IsValidEntry(u8 selected)
+{
+	if (selected == 3 && !OriginsGamePause.hasMainMenu)
+		return false
+	else
+		return base.GamePause.IsValidEntry(selected)
+}
+
+
+function void GamePause.DrawMenu(float time)
+{
+	constant array<string> ENTRY_TEXTS_DEFAULT = { "CONTINUE", "RESTART", "TITLE SCREEN", "MAIN MENU" }
+	constant array<string> ENTRY_TEXTS_OPTIONS = { "CONTINUE", "RESTART", "A.I.R. OPTIONS", "MAIN MENU" }
+	constant array<string> ENTRY_TEXTS_SPANISH_DEFAULT = { "CONTINUAR", "REINICIAR", "PANTALLA DE T£TULO", "MEN! PRINCIPAL" }
+	constant array<string> ENTRY_TEXTS_SPANISH_OPTIONS = { "CONTINUAR", "REINICIAR", "OPCIONES DE A.I.R.", "MEN! PRINCIPAL" }
+	constant array<string> ENTRY_TEXTS_FRENCH_DEFAULT = { "CONTINUER", "RECOMMENCER", "$CRAN TITRE", "MENU PRINCIPAL" }
+	constant array<string> ENTRY_TEXTS_FRENCH_OPTIONS = { "CONTINUER", "RECOMMENCER", "A.I.R. OPTIONS", "MENU PRINCIPAL" }
+	constant array<string> ENTRY_TEXTS_PORT_DEFAULT = { "CONTINUAR", "REINICIAR", "TELA PRINCIPAL", "MENU PRINCIPAL" }
+	constant array<string> ENTRY_TEXTS_PORT_OPTIONS = { "CONTINUAR", "REINICIAR", "OP#/ES DE A.I.R.", "MENU PRINCIPAL" }
+	constant u16 LINE_HEIGHT = 19
+
+	u8 numEntries = 1 + u8(GamePause.hasRestart) + u8(GamePause.hasOptions) + u8(OriginsGamePause.hasMainMenu)
+	u16 rightAnchor = getScreenWidth() + Math.roundToInt((1.0f - GamePause.visibility)*40)
+	u16 leftAnchor = getScreenWidth() + Math.roundToInt((-1.0f - -GamePause.visibility) * 20)
+	u16 upAnchor = getScreenHeight() - 27  + Math.roundToInt((1.0f - GamePause.visibility) * 30)
+	u16 py = getScreenHeight() - numEntries * LINE_HEIGHT
+	u32 blackfade = (0xff - Math.roundToInt((1.0f - GamePause.visibility) * 100)-0xaa)
+	u32 transparency = (0xff - Math.roundToInt((1.0f - GamePause.visibility) * 200))
+
+	string Buttonkey = (Origins.InputStyle == 1 ? "origins_input_icon_key" : Origins.InputStyle == 2 ? "origins_input_icon_ps4" : Origins.InputStyle == 3 ? "origins_input_icon_ps5" : Origins.InputStyle == 4 ? "origins_input_icon_xbox" : Origins.InputStyle == 5 ? "origins_input_icon_switch" : Origins.InputStyle == 6 ? "origins_input_icon_gens" : "@input_icon_button")
+	// Use lifetime context 1 for everything rendered by the pause menu
+	//  -> This allows for selectively clearing these sprites, texts, etc. in each frame without touching the game's rendered content
+	Renderer.resetLifetimeContext(1)
+	Renderer.setLifetimeContext(1)
+
+	Renderer.drawSprite("origins_pause_lower", rightAnchor - 230, getScreenHeight()-200, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff00, 0, transparency)
+	Renderer.drawRect(0, upAnchor, getScreenWidth(), 27, 0x000000ff, 0xff01, false)
+	Renderer.drawRect(rightAnchor-28, 0, 29, getScreenHeight(), 0x000000ff, 0xff00, false)
+
+	// Pause menu Text
+	Renderer.drawText("MontBlancBlack-origins-large", rightAnchor - (Origins.Language == 3 ? 120 : 98), py - 60, (Origins.Language == 1 ? "PAUSA" : Origins.Language == 3 ? "PAUSAR" : "PAUSE"), 0x003cb4ff + transparency, 1, 0, 0xffff, false)
+	Renderer.drawText("MontBlancBlack-origins-large:outline(0xffffffff, 2, false):shadow(1,1,0,1.0f)", rightAnchor - (Origins.Language == 3 ? 120 : 98), py - 60, (Origins.Language == 1 ? "PAUSA" : Origins.Language == 3 ? "PAUSAR" : "PAUSE"), 0xffffff00 + transparency, 1, 0, 0xfffe, false)
+	//Renderer.drawSprite((Origins.Language == 1 ? "origins_pause_txt_spanish" : "origins_pause_txt"), rightAnchor - 98, py - 44, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02,0, transparency)
+	// Transparent black background
+	Renderer.drawRect(0, 0, getScreenWidth(), getScreenHeight(), 0x0 + (blackfade), 0xff00, false)
+	// Player Name Drawing
+	Renderer.drawSprite("origins_playerbar", getScreenWidth() - 152, getScreenHeight() - 17, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02, 0, transparency)
+	Renderer.drawText("smallfont", getScreenWidth()-144, getScreenHeight() - 16, (Origins.Language == 1 ? "JUGADOR" : Origins.Language == 2 ? "JOUEUR" : Origins.Language == 3 ? "JOGADOR" : "PLAYER"), 0xffffff00 + transparency, 1, 0, 0xffff, false)
+	Renderer.drawText("smallfont", getScreenWidth()-108	, getScreenHeight() - 16, Origins.getCharacterPlayerName(global.characters), 0x003CB400 + transparency, 1, 0, 0xffff, false)
+	// Draw Button Prompts
+	Renderer.drawRect(24, getScreenHeight()-17, 19, 8, 0x003CB400 + transparency, 0xff02, false)
+	Renderer.drawSprite("origins_prompt", 46, getScreenHeight()-9, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02, 0x80, transparency)
+	Renderer.drawRect(58, getScreenHeight()-17, (Origins.Language == 1 ? 50 : Origins.Language == 2 ? 61 : Origins.Language == 3 ? 49 : 45), 8, 0x003CB400 + transparency, 0xff02, false)
+	Renderer.drawSprite("origins_prompt", (Origins.Language == 1 ? 112 : Origins.Language == 2 ? 123 : Origins.Language == 3 ? 111 : 107), getScreenHeight()-9, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02, 0x80, transparency)
+	
+	if (Origins.ScreeniePrompt == 1)
+	{
+		Renderer.drawRect((Origins.Language == 1 ? 123 : Origins.Language == 2 ? 125 : 119), getScreenHeight()-17, (Origins.Language == 1 ? 101 : Origins.Language == 2 ? 92 : Origins.Language == 3 ? 98 : 66), 8, 0x003CB400 + transparency, 0xff02, false)
+		Renderer.drawSprite("origins_prompt", (Origins.Language == 1 ? 228 : Origins.Language == 2 ? 221 : Origins.Language == 3 ? 220 : 189), getScreenHeight()-9, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02, 0x80, transparency)
+		Renderer.drawSprite(stringformat("%s_Y", Buttonkey), (Origins.Language == 1 ? 120 : Origins.Language == 2 ? 131 : Origins.Language == 3 ? 119 : 115), getScreenHeight()-13, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xffff, 0, transparency)
+		Renderer.drawText("smallfont", (Origins.Language == 1 ? 128 : Origins.Language == 2 ? 139 : Origins.Language == 3 ? 127 : 123), getScreenHeight()-16, (Origins.Language == 1 ? "Modo de capt. de pantalla" : Origins.Language == 2 ? "Mode capture d'ecran" : Origins.Language == 3 ? "Modo de captura de tela" : "Screenshot Mode"), 0xffffff00 + transparency, 1, 0, 0xffff, false)
+	}
+	//Draw Buttons
+	Renderer.drawSprite(stringformat("%s_A", Buttonkey), 25, getScreenHeight()-13, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xffff, 0, transparency)	
+	Renderer.drawSprite(stringformat("%s_B", Buttonkey), 54, getScreenHeight()-13, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xffff, 0, transparency)
+	// Draw Text
+	Renderer.drawText("smallfont", 33, getScreenHeight()-16, "OK", 0xffffff00 + transparency, 1, 0, 0xffff, false)
+	Renderer.drawText("smallfont", 62, getScreenHeight()-16, (Origins.Language == 1 ? "CERRAR MENU" : Origins.Language == 2 ? "FERMER LE MENU" : Origins.Language == 3 ? "FECHAR MENU" : "Close Menu"), 0xffffff00 + transparency, 1, 0, 0xffff, false)
+	
+	
+	#if ACHIEVEMENTS_PLUS_ACTIVE
+		if (Origins.ShowAPCoins == 0)
+		{
+			Renderer.drawSprite("originspause_coin", leftAnchor-(getScreenWidth()-13), getScreenHeight()-41, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff02, 0, transparency)
+			Renderer.drawSprite("origins_coin_arrow", leftAnchor-getScreenWidth(), getScreenHeight()-50, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff01, 0, transparency)
+			Renderer.drawText("oxyfont_tiny:shadow(1,1,0,1.0f)", leftAnchor-(getScreenWidth()-24), getScreenHeight()-48, "COINS", 0xF5F61F00 + transparency, 1, 1, 0xffff, false)
+			Renderer.drawText("smallfont:shadow(1,1,0,1.0f)", leftAnchor-(getScreenWidth()-27), getScreenHeight()-40, Origins.GetAchievementsPlusCoins(), 0xffffff00 + transparency, 1, 0, 0xffff, false)
+		}
+	#endif
+	for (u8 k = 0; k < GamePause.NUM_ENTRIES; ++k)
+	{
+		float alpha = (Math.sin(time * 8.0f))
+	
+		if (!GamePause.IsValidEntry(k))
+			continue
+
+		string key = "origins_pause_blackbar"
+		if (GamePause.selectedEntry == k)
+		{
+			if (OriginsGamePause.DigitTimer < 0x02) 
+				OriginsGamePause.DigitTimer++
+			if (OriginsGamePause.Digit < 0x03 && OriginsGamePause.DigitTimer == 0x02) 
+			{
+				OriginsGamePause.DigitTimer = 0
+				OriginsGamePause.Digit++
+			}
+
+			key = "origins_pause_blackbar_highlighted"
+			Renderer.drawSprite("origins_yellow_arrow", getScreenWidth() - (146 + OriginsGamePause.Digit) , py - 34, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff01, 0, transparency)
+		}	
+
+
+		Renderer.drawSpriteTinted(key, getScreenWidth() - 151, py - 35, 0, SPRITE_FLAG_PRIO | SPRITE_FLAG_NO_GLOBAL_TINT, 0xff01, 0.0f, Color.lerp(0xeb1517ff, 0xFA4942ff, alpha), 1.0f)
+		Renderer.drawText("MontBlancBlack-origins:shadow(1,1,0,1.0f)", getScreenWidth()-136, py-34, (Origins.Language == 1 ? (Origins.UseOptions == 0 ? ENTRY_TEXTS_SPANISH_DEFAULT[k] : ENTRY_TEXTS_SPANISH_OPTIONS[k]) : Origins.Language == 2 ? (Origins.UseOptions == 0 ? ENTRY_TEXTS_FRENCH_DEFAULT[k] : ENTRY_TEXTS_FRENCH_OPTIONS[k]) : Origins.Language == 3 ? (Origins.UseOptions == 0 ? ENTRY_TEXTS_PORT_DEFAULT[k] : ENTRY_TEXTS_PORT_OPTIONS[k]) : (Origins.UseOptions == 0 ? ENTRY_TEXTS_DEFAULT[k] : ENTRY_TEXTS_OPTIONS[k])), 0xffffff00 + transparency, 1, 0, 0xff02, false)
+
+		py += LINE_HEIGHT
+	}
+}

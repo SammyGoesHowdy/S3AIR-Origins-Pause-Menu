@@ -1,0 +1,110 @@
+{
+	"Metadata":
+	{
+		"Name": "Sonic Origins Pause Menu",
+		"Author": "SammyGoesHowdy",
+		"Description": "Recreation of the pause menu from Sonic Origins.",
+		"ModVersion": "1.1",
+		"GameVersion": "25.02.15.0",
+		"UniqueID": "OriginsPauseMenu"
+		
+	},
+	"Settings":
+	{
+		"List":
+		[
+			{
+				"InternalName": "Origins.PlayerBarName",
+				"DisplayName": "Username Display",
+				"Variable": "Origins.PlayerBarName",
+				"DefaultValue": "0",
+				"Category": "Menu Appearance",
+				"Options":
+				{
+					"0": "Character Name",
+					"1": "IntegerGeorge802",
+					"2": "yuzu",
+				}
+			},
+			{
+				"InternalName": "Origins.ScreeniePrompt",
+				"DisplayName": "Hide Screenshot Mode Prompt",
+				"Variable": "Origins.ScreeniePrompt",
+				"DefaultValue": "0",
+				"Category": "Menu Appearance",
+				"Options":
+				{
+					"0": "Yes",
+					"1": "No",
+				}
+			},
+			{
+				"InternalName": "Origins.Language",
+				"DisplayName": "Language",
+				"Variable": "Origins.Language",
+				"DefaultValue": "0",
+				"Category": "Menu Appearance",
+				"Options":
+				{
+					"0": "English",
+					"1": "Espanol",
+					"2": "Francais",
+					"3": "Portuguese (Brasil)"
+				}
+			},
+			{
+				"InternalName": "Origins.InputStyle",
+				"DisplayName": "Hot-key Style",
+				"Variable": "Origins.InputStyle",
+				"DefaultValue": "0",
+				"Category": "Menu Appearance",
+				"Options":
+				{
+					"0": "3 A.I.R. Style (Dynamic)",
+					"1": "(Keyboard) Origins Style",
+					"2": "(PS4) Origins Style",
+					"3": "(PS5) Origins Style",
+					"4": "(Xbox) Origins Style",
+					"5": "(Switch) Origins Style",
+					"6": "(Genesis) Origins Style"
+				}
+			},
+			{
+				"InternalName": "Origins.UseOptions",
+				"DisplayName": "3rd Pause Menu Option",
+				"Variable": "Origins.UseOptions",
+				"DefaultValue": "0",
+				"Category": "Features",
+				"Options":
+				{
+					"0": "Title Screen",
+					"1": "AIR Options",
+				}
+			},
+			{
+				"InternalName": "Origins.ShowAPCoins",
+				"DisplayName": "Achivements Plus Coin Display",
+				"Variable": "Origins.ShowAPCoins",
+				"DefaultValue": "1",
+				"Category": "Features",
+				"Options":
+				{
+					"0": "ON",
+					"1": "OFF",
+				}
+			},
+			{
+				"InternalName": "Origins.RestartButton",
+				"DisplayName": "Restart Button",
+				"Variable": "Origins.RestartButton",
+				"DefaultValue": "1",
+				"Category": "Features",
+				"Options":
+				{
+					"0": "Sends you to beginning of the level",
+					"1": "Sends you to last checkpoint",
+				}
+			}
+		]
+	}
+}

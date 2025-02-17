@@ -1,0 +1,10 @@
+{
+	"origins_pause_lower": { "File": "pause.png", "Rect": "0,0,250,250" },
+	"origins_pause_blackbar": { "File": "blackbar.png", "Rect": "0,0,155,15" },
+	"origins_pause_blackbar_highlighted": { "File": "blackbar.png", "Rect": "0,15,155,15" },
+	"origins_playerbar": { "File": "playerBar.png", "Rect": "0,0,153,7" },
+	"origins_prompt": { "File": "arrow.png", "Rect": "0,0,4,8" },
+	"origins_coin_arrow": { "File": "orange_arrow.png", "Rect": "0,0,92,18" },
+	"origins_yellow_arrow": { "File": "yellow_arrow.png", "Rect": "0,0,9,13" },
+	"originspause_coin": { "File": "coin.png", "Rect": "0,0,16,16", "Center":"8,8" },
+}
